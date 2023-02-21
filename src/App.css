@@ -1,8 +1,15 @@
 .App{
-  height: 20vh;
+  height: 100%;
   width: 60vw;
   position: relative;
 }
+
+
+select+select { 
+  margin : 30px 40px;
+}
+
+
 
 @media (min-width: 768px) {
    .App {

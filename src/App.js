@@ -1,7 +1,7 @@
 import './App.css';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Bar } from 'react-chartjs-2';
+import { Bar  } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,7 +11,8 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import DatePicker from 'react-datepicker'
+import DatePicker from 'react-date-picker'
+import DisplayLineChart from './components/DisplayLineChart';
 
 ChartJS.register(
   CategoryScale,
@@ -31,15 +32,17 @@ function App() {
       title: {
         display: true,
         text: 'Bar Chart'
-      }
-    }
+      },
+    },
+    // responsive : true,
+    // maintainAspectRatio : false,
   })
   const [chartData, setChartData] = useState({})
   const [filterType, setFilterType] = useState(DATA_FILTER_TYPES[0])
   const [allFilterDataOptions, setAllFilterDataOptions] = useState({})
   const [selectedFilterOptions, setSelectedFilterOptions] = useState([])
-  const [selectedDataOption, setSelectedDataOption] = useState("Blast!")
-
+  // const [selectedDataOption, setSelectedDataOption] = useState("Blast!")
+  const [isFilterSelected , setIsFilterSelected] = useState(false)
   const [allSortedDates, setAllSortedDates] = useState([])
 
   const [startDate, setStartDate] = useState(new Date())
@@ -49,12 +52,13 @@ function App() {
 
 
   useEffect(() => {
-    axios.get("./csvjson.json").then(res=> {
+    axios.get("./csvjson.json").then(res=> {   //  could have used  d3.csv to get the data but didnt want to get into d3 since time is less
       setCoreDate(res.data)
       resetFilterDateOptions(res.data)
       resetDateRange(res.data)
       updateChartData(getReducedData(res.data,"App", 'Blast!'));
     } )
+    
   }, [])
 
   const resetDateRange = (data) => {
@@ -75,7 +79,7 @@ function App() {
       labels: Object.keys(data).sort((a,b) => getDateObj(a) - getDateObj(b)).map(el => getDateObj(el).toLocaleString()),
       datasets: [
         {
-          label: 'Users Gained',
+          label: 'Active Users',
           backgroundColor: 'rgba(0, 255, 0, 0.2)',
           borderColor: 'rgb(0, 255, 0)',
           borderWidth: 1,
@@ -98,11 +102,12 @@ function App() {
       }
       dataObj[el.Date] = el["Daily Users"]
     })
-  return dataObj;
+    return dataObj;
   }
 
   const handleFilterTypeChange = (e)=>  {
     e.preventDefault();
+    setIsFilterSelected(true)
     setSelectedFilterOptions(allFilterDataOptions[e.target.value])
     setFilterType(e.target.value)
     updateChartData(getReducedData(coreData ,filterType, selectedFilterOptions[0]))
@@ -152,18 +157,26 @@ function App() {
       <select onChange={handleFilterTypeChange}>
         { DATA_FILTER_TYPES.map(el => <option key={el} value={el}>{el}</option>)}
       </select>
-      <select value={selectedDataOption} onChange={handleFilterDataChange}>
-        {
-          selectedFilterOptions.map(el => <option key={el} value={el}>{el}</option>)
-        }
-      </select>
+      {
+         isFilterSelected &&
+         <select  onChange={handleFilterDataChange}>
+         {
+           selectedFilterOptions.map(el => <option key={el} value={el}>{el}</option>)
+         }
+       </select>
+      }
 
 
       StartDate: 
       <DatePicker onChange={handleStartDateChange} value={startDate} />
       EndDate:
       <DatePicker onChange={handleEndDateChange} value={endDate} />
-
+      <div style = {{margin : "50px 20px"}}>
+        {
+           isFilterSelected &&  <DisplayLineChart data =  {chartData} />
+        }
+      </div>
+      
     </div>
   );
 }
